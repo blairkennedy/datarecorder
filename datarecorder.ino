@@ -18,6 +18,7 @@ Date: April 2023
 // I2C and SPI Bus libraries
 #include <Adafruit_BusIO_Register.h>
 #include <SPI.h>
+#include <SD.h>
 
 // 1306 OLED Driver
 #include <Adafruit_SSD1306.h>
@@ -33,10 +34,16 @@ Date: April 2023
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+File myFile; // File handle
+const int SD_ChipSelect = 0xD8; //Wemos D1 mini CS pin is 0xD8
+
 void setup() {
   // put your setup code here, to run once: 
   Serial.begin(115200); // serial interface output
 
+  Serial.println(F("Starting datareader sketch"));
+
+   
 
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -60,14 +67,31 @@ void setup() {
   // drawing commands to make them visible on screen!
   display.display();
   delay(2000);
+  
+  Serial.print("Initializing SD card...");
 
+  if (!SD.begin(SD_ChipSelect)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("initialization done.");
+
+  // test SD card reader
+  // testFile();
 }
+
+
+
 
 String test_string = "Hello World";
 
+
+
 void loop() {
   // put your main code here, to run repeatedly:
+  
   displayText(test_string);
+  
 
 }
 
@@ -89,4 +113,39 @@ void displayText(String message) {
 
   display.display();
   delay(2000);
+}
+
+// Write and delete a file from the SD card
+void testFile() {
+
+
+
+  if (SD.exists("example.txt")) {
+    Serial.println("example.txt exists.");
+  } else {
+    Serial.println("example.txt doesn't exist.");
+  }
+
+  // open a new file and immediately close it:
+  Serial.println("Creating example.txt...");
+  myFile = SD.open("example.txt", FILE_WRITE);
+  myFile.close();
+
+  // Check to see if the file exists:
+  if (SD.exists("example.txt")) {
+    Serial.println("example.txt exists.");
+  } else {
+    Serial.println("example.txt doesn't exist.");
+  }
+
+  // delete the file:
+  Serial.println("Removing example.txt...");
+  SD.remove("example.txt");
+
+  if (SD.exists("example.txt")) {
+    Serial.println("example.txt exists.");
+  } else {
+    Serial.println("example.txt doesn't exist.");
+  }
+
 }
